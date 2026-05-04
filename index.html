@@ -38,6 +38,11 @@
         letter-spacing: 6px;
         pointer-events: none;
       }
+      #mode {
+        font-size: 14px;
+        letter-spacing: 3px;
+        color: #888;
+      }
       #help {
         position: fixed;
         bottom: 0;
@@ -56,9 +61,14 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="hud"><span id="score-left">0</span><span id="score-right">0</span></div>
+    <div id="hud">
+      <span id="score-left">0</span>
+      <span id="mode">1P vs AI</span>
+      <span id="score-right">0</span>
+    </div>
     <div id="help">
-      W/S = left paddle &nbsp;·&nbsp; ↑/↓ = right paddle &nbsp;·&nbsp; Space = serve
+      W/S = left paddle &nbsp;·&nbsp; ↑/↓ = right paddle &nbsp;·&nbsp; Space = serve &nbsp;·&nbsp; 1
+      = vs AI &nbsp;·&nbsp; 2 = 2P
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

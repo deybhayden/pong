@@ -6,6 +6,9 @@ const FIELD_H = 12; // play area height (y)
 const PADDLE_W = 0.4;
 const PADDLE_H = 2.4;
 const PADDLE_SPEED = 14;
+const AI_PADDLE_SPEED = 11; // slower than the player so AI can be beaten
+const AI_CENTER_DEADZONE = 0.25; // only used when drifting to center (avoids hover twitch)
+const AI_MAX_ERROR = 1.0; // random vertical aim offset, re-rolled per rally
 const BALL_SIZE = 0.4;
 const BALL_START_SPEED = 9;
 const BALL_SPEED_GAIN = 1.05; // per paddle hit
@@ -93,13 +96,17 @@ const state = {
   scoreRight: 0,
   serving: true,
   serveDir: 1, // 1 = serve to right, -1 = serve to left
+  mode: 'ai', // 'ai' = 1P vs AI, '2p' = 2P local
+  aiAimError: 0, // randomized per rally so the AI isn't pixel-perfect
 };
 
 const scoreLeftEl = document.getElementById('score-left');
 const scoreRightEl = document.getElementById('score-right');
+const modeEl = document.getElementById('mode');
 function updateHud() {
   scoreLeftEl.textContent = state.scoreLeft;
   scoreRightEl.textContent = state.scoreRight;
+  if (modeEl) modeEl.textContent = state.mode === 'ai' ? '1P vs AI' : '2P LOCAL';
 }
 
 function resetBall(towardDir) {
@@ -110,6 +117,8 @@ function resetBall(towardDir) {
   state.ball.speed = BALL_START_SPEED;
   state.serving = true;
   state.serveDir = towardDir;
+  // Re-roll AI aim error so each rally plays differently.
+  state.aiAimError = (Math.random() * 2 - 1) * AI_MAX_ERROR;
 }
 
 function serve() {
@@ -129,6 +138,14 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
     serve();
     e.preventDefault();
+  }
+  // Mode toggle is only allowed between rallies to avoid mid-play surprises.
+  if (state.serving && (e.code === 'Digit1' || e.code === 'Numpad1')) {
+    state.mode = 'ai';
+    updateHud();
+  } else if (state.serving && (e.code === 'Digit2' || e.code === 'Numpad2')) {
+    state.mode = '2p';
+    updateHud();
   }
 });
 window.addEventListener('keyup', (e) => {
@@ -172,6 +189,29 @@ function paddleHit(ball, paddle, side) {
   return true;
 }
 
+// ---------- AI ----------
+function updateAI(dt) {
+  // Target defaults to drifting back to center when the ball is moving away.
+  let targetY = 0;
+  let tracking = false;
+  if (state.ball.vx > 0 && !state.serving) {
+    // Ball heading toward AI: aim at ball.y plus a stable per-rally error.
+    targetY = state.ball.y + state.aiAimError;
+    tracking = true;
+  }
+
+  const dy = targetY - rightPaddle.position.y;
+
+  // Only apply a deadzone when idling toward center; when actively tracking the
+  // ball we move every frame so the motion stays smooth (no step-stop stutter).
+  // Math.min(step, |dy|) below already prevents overshoot, so no jitter guard
+  // is needed in tracking mode.
+  if (!tracking && Math.abs(dy) < AI_CENTER_DEADZONE) return;
+
+  const step = AI_PADDLE_SPEED * dt;
+  rightPaddle.position.y += Math.sign(dy) * Math.min(step, Math.abs(dy));
+}
+
 // ---------- Main loop ----------
 const clock = new THREE.Clock();
 function tick() {
@@ -180,8 +220,12 @@ function tick() {
   // Paddle input
   if (keys['KeyW']) leftPaddle.position.y += PADDLE_SPEED * dt;
   if (keys['KeyS']) leftPaddle.position.y -= PADDLE_SPEED * dt;
-  if (keys['ArrowUp']) rightPaddle.position.y += PADDLE_SPEED * dt;
-  if (keys['ArrowDown']) rightPaddle.position.y -= PADDLE_SPEED * dt;
+  if (state.mode === '2p') {
+    if (keys['ArrowUp']) rightPaddle.position.y += PADDLE_SPEED * dt;
+    if (keys['ArrowDown']) rightPaddle.position.y -= PADDLE_SPEED * dt;
+  } else {
+    updateAI(dt);
+  }
   clampPaddle(leftPaddle);
   clampPaddle(rightPaddle);
 
