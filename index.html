@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pong</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+      }
+      #app {
+        width: 100vw;
+        height: 100vh;
+      }
+      #hud {
+        position: fixed;
+        top: 12px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: #fff;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 32px;
+        letter-spacing: 8px;
+        pointer-events: none;
+      }
+      #help {
+        position: fixed;
+        bottom: 12px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: #888;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12px;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud"><span id="score-left">0</span> &nbsp; <span id="score-right">0</span></div>
+    <div id="help">
+      W/S = left paddle &nbsp;·&nbsp; ↑/↓ = right paddle &nbsp;·&nbsp; Space = serve
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
