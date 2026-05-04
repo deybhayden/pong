@@ -27,16 +27,26 @@ camera.position.set(0, 0, 10);
 camera.lookAt(0, 0, 0);
 
 function fitCamera() {
-  const aspect = window.innerWidth / window.innerHeight;
-  const margin = 1.1;
-  const halfH = (FIELD_H / 2) * margin;
-  const halfW = Math.max((FIELD_W / 2) * margin, halfH * aspect);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const aspect = w / h;
+
+  // Reserve vertical space (in pixels) for HUD above and help below the field.
+  // Must match `--hud-zone` in index.html.
+  const HUD_PX = 64;
+  // Convert reserved px into world units relative to FIELD_H so the field
+  // never overlaps the HUD bands, regardless of window size.
+  const playablePx = Math.max(1, h - 2 * HUD_PX);
+  const unitsPerPx = FIELD_H / playablePx;
+  const halfH = (h / 2) * unitsPerPx;
+  const halfW = Math.max((FIELD_W / 2) * 1.1, halfH * aspect);
+
   camera.left = -halfW;
   camera.right = halfW;
   camera.top = halfH;
   camera.bottom = -halfH;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
 }
 window.addEventListener('resize', fitCamera);
 fitCamera();
