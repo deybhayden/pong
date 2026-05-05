@@ -57,6 +57,22 @@
         font-size: 12px;
         pointer-events: none;
       }
+      #back {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        color: #888;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-decoration: none;
+        text-transform: uppercase;
+        pointer-events: auto;
+        z-index: 10;
+      }
+      #back:hover {
+        color: #fff;
+      }
     </style>
   </head>
   <body>
@@ -66,6 +82,7 @@
       <span id="mode">1P vs AI</span>
       <span id="score-right">0</span>
     </div>
+    <a id="back" href="https://deybhayden.xyz/games/">← back</a>
     <div id="help">
       W/S = left paddle &nbsp;·&nbsp; ↑/↓ = right paddle &nbsp;·&nbsp; Space = serve &nbsp;·&nbsp; 1
       = vs AI &nbsp;·&nbsp; 2 = 2P &nbsp;·&nbsp; M = mute
