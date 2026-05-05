@@ -1,4 +1,12 @@
 import * as THREE from 'three';
+import {
+  unlock as unlockAudio,
+  toggleMute,
+  isMuted,
+  playPaddleHit,
+  playWallHit,
+  playScore,
+} from './audio.js';
 
 // ---------- Constants ----------
 const FIELD_W = 20; // play area width  (x)
@@ -106,7 +114,9 @@ const modeEl = document.getElementById('mode');
 function updateHud() {
   scoreLeftEl.textContent = state.scoreLeft;
   scoreRightEl.textContent = state.scoreRight;
-  if (modeEl) modeEl.textContent = state.mode === 'ai' ? '1P vs AI' : '2P LOCAL';
+  let modeText = state.mode === 'ai' ? '1P vs AI' : '2P LOCAL';
+  if (isMuted()) modeText += ' · MUTED';
+  if (modeEl) modeEl.textContent = modeText;
 }
 
 function resetBall(towardDir) {
@@ -135,9 +145,16 @@ resetBall(Math.random() < 0.5 ? 1 : -1);
 const keys = Object.create(null);
 window.addEventListener('keydown', (e) => {
   keys[e.code] = true;
+  // Any key press counts as a user gesture, so this also unlocks audio on
+  // browsers that gate AudioContext behind interaction.
+  unlockAudio();
   if (e.code === 'Space') {
     serve();
     e.preventDefault();
+  }
+  if (e.code === 'KeyM') {
+    toggleMute();
+    updateHud();
   }
   // Mode toggle is only allowed between rallies to avoid mid-play surprises.
   if (state.serving && (e.code === 'Digit1' || e.code === 'Numpad1')) {
@@ -239,22 +256,26 @@ function tick() {
     if (state.ball.y > yLimit) {
       state.ball.y = yLimit;
       state.ball.vy = -Math.abs(state.ball.vy);
+      playWallHit();
     } else if (state.ball.y < -yLimit) {
       state.ball.y = -yLimit;
       state.ball.vy = Math.abs(state.ball.vy);
+      playWallHit();
     }
 
     // Paddles
-    paddleHit(state.ball, leftPaddle, -1);
-    paddleHit(state.ball, rightPaddle, 1);
+    if (paddleHit(state.ball, leftPaddle, -1)) playPaddleHit();
+    if (paddleHit(state.ball, rightPaddle, 1)) playPaddleHit();
 
     // Score
     if (state.ball.x < -FIELD_W / 2) {
       state.scoreRight++;
+      playScore();
       updateHud();
       resetBall(-1); // next serve toward the player who was scored on
     } else if (state.ball.x > FIELD_W / 2) {
       state.scoreLeft++;
+      playScore();
       updateHud();
       resetBall(1);
     }
